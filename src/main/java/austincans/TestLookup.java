@@ -1,5 +1,6 @@
 package austincans;
 
+import java.lang.Math;
 import java.io.*;
 import java.util.*;
 import java.util.Arrays;
@@ -74,16 +75,62 @@ public final class TestLookup {
           
     };
 
+    public static ShooterConfig ProjectilePredictionIndex(double d, boolean highGoal ) {
+	    // Use information about the start, end and step distance of a list to determine
+	    // the exact index of the relevant measurements.
+
+	    ShooterConfig sLow = null;
+	    ShooterConfig sHigh = null;
+	    int index = 0;
+
+	    if ( ! highGoal ){
+		    return null; // Didn't code, should assert and break.
+	    };
+
+	    if ( d>= ShooterRegularMax ){
+		    // Distance is farther than we measured, return the last element of the array and hope for the best.
+		    // ( Remember array's start indexing at 0, so length-1 is last element.
+		    return shooterConfigStepList[shooterConfigStepList.length-1];
+	    }else if ( d <= ShooterRegularMin ){
+		    // Shorter than we measured, return the first element of the array and hope for the best.
+		    return shooterConfigStepList[0];
+	    }else {
+		    // Calculate which of the regular intervals this fits into
+		    // And return the interpolation between that config and the next higher one.
+		    index = (int)Math.floor((d-ShooterRegularMin)/ShooterRegularStep); 
+		    return new ShooterConfig(d,shooterConfigStepList[index],shooterConfigStepList[index+1]);
+	    }
+    };
+
     private static ShooterConfig[] shooterConfigList = {
 	  // These need to either be sorted, or stored in order
 	  // You can notice a mistake below.
 	  // We can sort the array at runtime to make sure that no mistakes exist.
 	  
-	  new ShooterConfig( 5.0, 22.5, 80.0 ),
-	  new ShooterConfig( 2.0, 23.5, 80.0 ),
-	  new ShooterConfig( 8.0, 25.0, 70.0 ),
-	  new ShooterConfig( 17.0, 28.8, 60.0)
+	    new ShooterConfig(  6.0, 25.0, 80 ),
+	    new ShooterConfig(  2.0, 23.5, 80 ),
+	    new ShooterConfig(  8.0, 25.0, 70 ),
+	    new ShooterConfig( 14.0, 26.5, 60 )
     };
+
+    private static ShooterConfig[] shooterConfigStepList = {
+	    // This is an example of a regularly sampled list with a start, end and defined step.
+	    // You can use this type of list for an indexed lookup, where there is no searching required at all.
+	    // This list starts at 2, ends at 14 and each step is 2 feet.
+	    
+	    new ShooterConfig(  2.0, 23.5, 80 ),
+	    new ShooterConfig(  4.0, 24.5, 80 ),
+	    new ShooterConfig(  6.0, 25.0, 80 ),
+	    new ShooterConfig(  8.0, 25.0, 70 ),
+	    new ShooterConfig( 10.0, 26.0, 70 ),
+	    new ShooterConfig( 12.0, 26.0, 60 ),
+	    new ShooterConfig( 14.0, 26.5, 60 )
+    };
+    private static double ShooterRegularMin = 2.0;
+    private static double ShooterRegularMax = 14.0;
+    private static double ShooterRegularStep = 2.0;
+
+
 
   public static void main(String... args) {
     Arrays.sort(shooterConfigList);
@@ -92,9 +139,13 @@ public final class TestLookup {
     double distance;
     try{
 	  System.out.println("There should be duplicate lines below for using binary search, and linear search\n");
+	  System.out.println("The index will match on 2,6,8,14 and might be different otherwise.\n");
 	  while ( true ){
              System.out.println("Enter Distance:");
              distance = Double.parseDouble(br.readLine());
+	     results = ProjectilePredictionIndex(distance,true);
+	     System.out.printf("Using Index lookup: Distance: %f Velocity in Ft/s: %f fake RPM: (100*v): %f Angle for Hood: %f\n",distance,
+			     results.getVelocity(),results.getRPM(),results.getAngleDegrees());
 	     results = ProjectilePredictionBinarySearch(distance,true);
 	     System.out.printf("Using Binary Search: Distance: %f Velocity in Ft/s: %f fake RPM: (100*v): %f Angle for Hood: %f\n",distance,
 			     results.getVelocity(),results.getRPM(),results.getAngleDegrees());
